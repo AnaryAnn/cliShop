@@ -7,6 +7,7 @@ import model.Order;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 public interface OrderService {
 
@@ -40,6 +41,17 @@ public interface OrderService {
      */
     void refund(Long userId, Long orderId) throws OrderException, WalletException;
 
+    /**
+     * Получение списка всех заказов пользователя
+     * @param userId идентификатор пользователя
+     * @return набор свех заказов пользователя
+     */
+    Set<Order> getUserOrdersSet(Long userId);
 
+    /**
+     * Получение списка всех заказов
+     * @return набор свех заказов
+     */
+    Collection<Order> getAllOrders();
 
 }

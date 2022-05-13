@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 public class Amount {
@@ -26,5 +28,18 @@ public class Amount {
 
     public void setSum(double sum) {
         this.sum = sum;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Amount amount = (Amount) o;
+        return Double.compare(amount.sum, sum) == 0 && currency == amount.currency;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(currency, sum);
     }
 }

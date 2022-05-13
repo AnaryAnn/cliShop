@@ -1,17 +1,22 @@
 package model;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class Category {
 
-    private long id;
-    private String name;
-    private Category parent;
+    private final Long id;
+    private final String name;
+    private final Category parent;
 
     private Category(long id, String name, Category parent) {
-        this.id = id;
-        this.name = name;
+        this.id = Objects.requireNonNull(id, "id");
+        this.name = Objects.requireNonNull(name, "name");
         this.parent = parent;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public long getId() {
@@ -22,13 +27,21 @@ public class Category {
         return name;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Category category = (Category) o;
+        return id.equals(category.id) && name.equals(category.name) && Objects.equals(parent, category.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, parent);
+    }
 
     public Optional<Category> getParent() {
         return Optional.ofNullable(parent);
-    }
-
-    public static Builder builder(){
-        return new Builder();
     }
 
     public static class Builder {

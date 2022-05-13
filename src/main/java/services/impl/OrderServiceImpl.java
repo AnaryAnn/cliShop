@@ -156,8 +156,34 @@ public class OrderServiceImpl implements OrderService {
         System.out.printf("Средства по заказу №%s успешно возвращены", orderId);
     }
 
+    @Override
     public Optional<Order> findOrder(Long orderId) {
         return Optional.ofNullable(ordersMap.get(orderId));
+    }
+
+    @Override
+    public Set<Order> getUserOrdersSet(Long userId) {
+        requireNonNull(userId, "userId");
+
+        Optional<Set<Long>> orderIdsOptional = Optional.ofNullable(userOrdersMap.get(userId));
+        if (orderIdsOptional.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<Long> orderIds = orderIdsOptional.get();
+        Set<Order> result = new HashSet<>();
+        for (Long orderId : orderIds) {
+            if (ordersMap.containsKey(orderId)) {
+                result.add(ordersMap.get(orderId));
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public Collection<Order> getAllOrders() {
+        return ordersMap.values();
     }
 
 }

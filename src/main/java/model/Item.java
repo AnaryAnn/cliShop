@@ -1,5 +1,9 @@
 package model;
 
+import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
+
 public class Item {
 
     private final Long id;
@@ -7,11 +11,15 @@ public class Item {
     private final Category category;
     private final Amount amount;
 
-    private Item(long id, String name, Category category, Amount amount) {
-        this.id = id;
-        this.name = name;
-        this.category = category;
-        this.amount = amount;
+    private Item(Long id, String name, Category category, Amount amount) {
+        this.id = requireNonNull(id, "id");
+        this.name = requireNonNull(name, "name");
+        this.category = requireNonNull(category, "category");
+        this.amount = requireNonNull(amount, "amount");
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public Long getId() {
@@ -30,11 +38,20 @@ public class Item {
         return amount;
     }
 
-    public static Builder builder(){
-        return new Builder();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return id.equals(item.id) && name.equals(item.name) && category.equals(item.category) && amount.equals(item.amount);
     }
 
-    public static class Builder{
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, category, amount);
+    }
+
+    public static class Builder {
 
         private Long id;
         private String name;
@@ -61,7 +78,7 @@ public class Item {
             return this;
         }
 
-        public Item build(){
+        public Item build() {
             return new Item(id, name, category, amount);
         }
 
