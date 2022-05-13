@@ -14,7 +14,7 @@ public class WalletServiceImplTest {
     @Test
     public void testDeposit() {
 
-        WalletService walletService = new WalletServiceImpl();
+        WalletService walletService = WalletServiceImpl.getInstance();
         Wallet wallet = walletService.createWallet(32131l);
         try {
             walletService.deposit(32131l, new Amount(RUB, 100d));

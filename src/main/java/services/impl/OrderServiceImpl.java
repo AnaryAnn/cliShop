@@ -1,6 +1,7 @@
 package services.impl;
 
 import exceptions.OrderException;
+import exceptions.WalletException;
 import model.Currency;
 import model.*;
 import services.api.OrderService;
@@ -13,12 +14,30 @@ import static model.Currency.RUB;
 public class OrderServiceImpl implements OrderService {
 
     private static final Currency defaultCurrency = RUB;
+    private static OrderServiceImpl orderService;
 
-    private final Map<Long, Set<Order>> ordersMap = new HashMap<>();
+    /**
+     * Хранилище идентификаторов заказов пользователя (id пользователя - список id заказов пользователя)
+     */
+    private final Map<Long, Set<Long>> userOrdersMap = new HashMap<>();
+    /**
+     * Хранилище заказов (id заказа - заказ)
+     */
+    private final Map<Long, Order> ordersMap = new HashMap<>();
     private Long orderSequence = 0L;
 
+    private OrderServiceImpl() {
+    }
+
+    public static OrderServiceImpl getInstance() {
+        if (orderService == null) {
+            orderService = new OrderServiceImpl();
+        }
+        return orderService;
+    }
+
     @Override
-    public Order createOrder(Long userId, Collection<Item> items) throws OrderException {
+    public Long createOrder(Long userId, Collection<Item> items) throws OrderException {
         requireNonNull(userId, "userId");
         if (items.isEmpty()) {
             throw new OrderException("Корзина пуста");
@@ -26,23 +45,31 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = Order.builder()
                 .setId(++orderSequence)
+                .setUserId(userId)
                 .setStatus(Status.CREATED)
                 .setItems(items)
                 .setTotalAmount(getTotalAmount(items))
                 .build();
 
-        saveOrder(userId, order);
+        saveOrder(order);
 
-        return order;
+        return order.getId();
     }
 
-    private void saveOrder(Long userId, Order order) {
-        Set<Order> userOrders = ordersMap.get(userId);
-        if (userOrders == null) {
-            userOrders = new HashSet<>();
+    private void saveOrder(Order order) {
+
+        ordersMap.put(order.getId(), order);
+
+        Set<Long> userOrderIds = userOrdersMap.get(order.getUserId());
+        if (userOrderIds == null) {
+            userOrderIds = new HashSet<>();
         }
-        userOrders.add(order);
-        ordersMap.put(userId, userOrders);
+        userOrderIds.add(order.getId());
+        userOrdersMap.put(order.getUserId(), userOrderIds);
+    }
+
+    private void deleteOrder(Order order) {
+        ordersMap.remove(order.getId());
     }
 
     private Amount getTotalAmount(Collection<Item> items) {
@@ -69,12 +96,68 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void payment() {
+    public void payment(Long userId, Long orderId) throws WalletException, OrderException {
+        requireNonNull(userId, "userId");
+        requireNonNull(orderId, "orderId");
 
+        Optional<Order> orderOptional = findOrder(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new OrderException(String.format("Заказ не существует: orderId=%s", orderId));
+        }
+
+        Order order = orderOptional.get();
+        WalletServiceImpl.getInstance().withdraw(userId, order.getTotalAmount());
+
+        deleteOrder(order);
+
+        order = Order.builder()
+                .setId(order.getId())
+                .setUserId(userId)
+                .setStatus(Status.PAID)
+                .setItems(order.getItems())
+                .setTotalAmount(order.getTotalAmount())
+                .build();
+
+        saveOrder(order);
+
+        System.out.println("Заказ №" + orderId + " успешно оплачен");
     }
 
     @Override
-    public void refund() {
+    public void refund(Long userId, Long orderId) throws OrderException, WalletException {
+        requireNonNull(userId, "userId");
+        requireNonNull(orderId, "orderId");
 
+        Optional<Order> orderOptional = findOrder(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new OrderException(String.format("Заказ не существует: orderId=%s", orderId));
+        }
+
+        Order order = orderOptional.get();
+        if (!order.getStatus().equals(Status.PAID)) {
+            throw new OrderException(String.format("Оформить возврат можно только по оплаченному заказу\n" +
+                    "Статус заказа №%s: %s", orderId, order.getStatus()));
+        }
+
+        WalletServiceImpl.getInstance().deposit(userId, order.getTotalAmount());
+
+        deleteOrder(order);
+
+        order = Order.builder()
+                .setId(order.getId())
+                .setUserId(userId)
+                .setStatus(Status.REFUNDED)
+                .setItems(order.getItems())
+                .setTotalAmount(order.getTotalAmount())
+                .build();
+
+        saveOrder(order);
+
+        System.out.printf("Средства по заказу №%s успешно возвращены", orderId);
     }
+
+    public Optional<Order> findOrder(Long orderId) {
+        return Optional.ofNullable(ordersMap.get(orderId));
+    }
+
 }

@@ -6,15 +6,17 @@ import java.util.Objects;
 public class Order {
 
     private final Long id;
+    private final Long userId;
     private final Status status;
     private final Collection<Item> items;
     private final Amount totalAmount;
 
-    private Order(Long id, Status status, Collection<Item> items, Amount totalAmount) {
+    private Order(Long id, Long userId, Status status, Collection<Item> items, Amount totalAmount) {
         this.id = Objects.requireNonNull(id, "id");
         this.status = Objects.requireNonNull(status, "status");
         this.items = Objects.requireNonNull(items, "items");
         this.totalAmount = Objects.requireNonNull(totalAmount, "totalAmount");
+        this.userId = Objects.requireNonNull(userId, "userId");
     }
 
     public static Builder builder() {
@@ -37,29 +39,39 @@ public class Order {
         return totalAmount;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return id.equals(order.id) && status == order.status
+        return id.equals(order.id) && userId.equals(order.userId) && status == order.status
                 && items.equals(order.items) && totalAmount.equals(order.totalAmount);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, status, items, totalAmount);
+        return Objects.hash(id, userId, status, items, totalAmount);
     }
 
     public static class Builder {
 
         private Long id;
+        private Long userId;
         private Status status;
         private Collection<Item> items;
         private Amount totalAmount;
 
         public Builder setId(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder setUserId(Long userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -79,7 +91,7 @@ public class Order {
         }
 
         public Order build() {
-            return new Order(id, status, items, totalAmount);
+            return new Order(id, userId, status, items, totalAmount);
         }
     }
 }

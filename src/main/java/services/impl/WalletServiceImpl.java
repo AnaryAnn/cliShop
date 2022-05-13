@@ -13,14 +13,22 @@ import java.util.Optional;
 
 public class WalletServiceImpl implements WalletService {
 
+    private static WalletServiceImpl walletService;
     private final Map<Long, Wallet> walletUserMap;
 
-    public WalletServiceImpl() {
+    private WalletServiceImpl() {
         this.walletUserMap = new HashMap<>();
     }
 
+    public static WalletServiceImpl getInstance() {
+        if (walletService == null) {
+            walletService = new WalletServiceImpl();
+        }
+        return walletService;
+    }
+
     @Override
-    public void deposit(Long userId, Amount amount) throws Exception {
+    public void deposit(Long userId, Amount amount) throws WalletException {
         if (!isAmountPositive(amount)) {
             throw new WalletException("Сумма не может быть отрицательной");
         }
@@ -46,7 +54,7 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public void withdraw(Long userId, Amount amount) throws Exception {
+    public void withdraw(Long userId, Amount amount) throws WalletException {
         if (!isAmountPositive(amount)) {
             throw new WalletException("Сумма не может быть отрицательной");
         }

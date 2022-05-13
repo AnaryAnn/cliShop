@@ -1,6 +1,7 @@
 package services.api;
 
 
+import exceptions.WalletException;
 import model.Amount;
 import model.Currency;
 import model.Wallet;
@@ -15,7 +16,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @param amount сумма и валюта пополнения
      */
-    void deposit(Long userId, Amount amount) throws Exception;
+    void deposit(Long userId, Amount amount) throws WalletException;
 
     /**
      * Снятие денежных средств с кошелька
@@ -23,7 +24,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @param amount сумма и валюта пополнения
      */
-    void withdraw(Long userId, Amount amount) throws Exception;
+    void withdraw(Long userId, Amount amount) throws WalletException;
 
     /**
      * Создание кошелька для пользователя
