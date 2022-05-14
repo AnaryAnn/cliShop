@@ -1,3 +1,5 @@
+import exceptions.WalletException;
+import gui.impl.CommandLineInterfaceImpl;
 import model.Amount;
 import model.Category;
 import model.Wallet;
@@ -9,6 +11,8 @@ import services.impl.WalletServiceImpl;
 import static model.Currency.RUB;
 
 public class Task {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws WalletException {
+
+        new CommandLineInterfaceImpl().run();
     }
 }
