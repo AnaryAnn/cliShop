@@ -51,7 +51,18 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public void getCirculationMoney() {
+    public Map<Category, Double> getCirculationMoney() {
 
+        OrderService orderService = OrderServiceImpl.getInstance();
+        Optional<Collection<Order>> ordersOptional = Optional.ofNullable(orderService.getAllOrders());
+        if (ordersOptional.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Collection<Order> orders = ordersOptional.get();
+        return orders.stream()
+                .filter(order -> order.getStatus() == Status.PAID)
+                .flatMap(order -> order.getItems().stream())
+                .collect(Collectors.groupingBy(item -> item.getCategory(), Collectors.summingDouble(value -> value.getAmount().getSum())));
     }
 }
