@@ -3,22 +3,18 @@ package gui.impl;
 import exceptions.OrderException;
 import exceptions.WalletException;
 import gui.api.CommandLineInterface;
-import model.Amount;
-import model.Category;
-import model.Item;
-import model.Order;
-import org.apache.commons.lang3.StringUtils;
+import model.Currency;
+import model.*;
+import services.api.ItemService;
 import services.api.OrderService;
 import services.api.StatisticService;
 import services.api.WalletService;
+import services.impl.ItemServiceImpl;
 import services.impl.OrderServiceImpl;
 import services.impl.StatisticServiceImpl;
 import services.impl.WalletServiceImpl;
 
-import java.util.InputMismatchException;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 import static model.Currency.*;
 
@@ -27,6 +23,7 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
     private final WalletService walletService = WalletServiceImpl.getInstance();
     private final OrderService orderService = OrderServiceImpl.getInstance();
     private final StatisticService statisticService = new StatisticServiceImpl();
+    private final ItemService itemService = new ItemServiceImpl();
     private Long userId;
 
 
@@ -44,6 +41,7 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         walletService.createWallet(userId);
     }
 
+
     private void showCli(Scanner scanner) throws WalletException, OrderException {
         Integer intOption;
         do {
@@ -51,12 +49,10 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
 
             System.out.println("----------------------------------");
             System.out.printf("Идентификатор пользователя: %s\n", userId);
-            System.out.printf("Баланс кошелька: %s RUB\n" +
-                            "%21s USD\n" +
-                            "%21s EUR\n",
-                    walletService.getBalance(userId).get(RUB),
-                    walletService.getBalance(userId).get(USD),
-                    walletService.getBalance(userId).get(EUR));
+            System.out.println("Баланс кошелька: ");
+            Arrays.stream(values())
+                    .forEach(currency -> System.out.printf("%21s %s\n",
+                            getBalance(currency), currency));
             System.out.println("----------------------------------");
             System.out.println("1 - Список доступных товаров");
             System.out.println("2 - Возврат заказа");
@@ -71,6 +67,11 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                 scanner.nextLine();
             }
             switch (intOption) {
+
+                case 1: {
+                    getItems(scanner);
+                }
+                break;
 
                 case 2: {
                     refund(scanner);
@@ -105,6 +106,48 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         while (intOption != 0);
     }
 
+    private double getBalance(Currency currency) {
+        Double result = walletService.getBalance(userId).get(currency);
+        return result == null ? 0 : result;
+    }
+
+    private void getItems(Scanner scanner) {
+        Integer intOption;
+        do {
+            intOption = null;
+
+            List<Item> items = itemService.getItems();
+            if (items.isEmpty()) {
+                break;
+            }
+
+            System.out.println("№ | Название товара | Цена");
+            items.forEach(item -> System.out.printf("%s | %s | %s %s\n", item.getId(), item.getName(),
+                    item.getAmount().getSum(), item.getAmount().getCurrency()));
+
+            while (intOption == null || intOption < 0 || intOption > items.size()) {
+                System.out.printf("\nВведите номер товара для покупки в диапазоне от %s до %s\n", 1, items.size());
+                System.out.println("0 - Назад");
+                intOption = askInt(scanner);
+                scanner.nextLine();
+            }
+
+            if (intOption != 0) {
+                Long orderId = null;
+                try {
+                    orderId = orderService.createOrder(userId, Collections.singleton(items.get(intOption - 1)));
+                    orderService.payment(userId, orderId);
+                } catch (OrderException | WalletException e) {
+                    System.out.println(e.getMessage());
+                    break;
+                }
+                System.out.println("Заказ №" + orderId + " успешно оплачен");
+            }
+        }
+
+        while (intOption != 0);
+    }
+
     private void statistic(Scanner scanner) {
         Integer intOption;
         do {
@@ -114,7 +157,7 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             System.out.println("1 - Топ продаж");
             System.out.println("2 - Популярная категория");
             System.out.println("3 - Оборот категорий");
-            System.out.println("0 - Отмена");
+            System.out.println("0 - Назад");
 
             while (intOption == null) {
                 intOption = askInt(scanner);
@@ -132,10 +175,22 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                     System.out.println();
                     break;
                 case 2:
+                    System.out.println("Категория | Кол-во продаж");
                     Map<Category, Long> bestSellersCategory = statisticService.getBestSellerCategory();
+                    bestSellersCategory.entrySet().stream()
+                            .sorted(Map.Entry.<Category, Long>comparingByValue().reversed())
+                            .limit(10)
+                            .forEach(entry -> System.out.printf("%s | %s \n", entry.getKey().getName(), entry.getValue()));
+                    System.out.println();
                     break;
                 case 3:
+                    System.out.println("Категория | Оборот RUB");
                     Map<Category, Double> circulationMoney = statisticService.getCirculationMoney();
+                    circulationMoney.entrySet().stream()
+                            .sorted(Map.Entry.<Category, Double>comparingByValue().reversed())
+                            .limit(10)
+                            .forEach(entry -> System.out.printf("%s | %s \n", entry.getKey().getName(), entry.getValue()));
+                    System.out.println();
                     break;
                 case 0:
                 default:
@@ -170,13 +225,6 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                     System.out.printf("%12s | %8s | %s %s\n", order.getId(), order.getStatus(),
                             order.getTotalAmount().getSum(), order.getTotalAmount().getCurrency());
                 }
-
-//                System.out.println("\nВведите номер заказа для просмотра списка товаров");
-//
-//                while (orderId == null) {
-//                    orderId = askLong(scanner);
-//                    scanner.nextLine();
-//                }
 
                 System.out.println("\n0 - Назад");
                 while (intOption == null) {

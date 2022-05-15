@@ -106,7 +106,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = orderOptional.get();
+
         WalletServiceImpl.getInstance().withdraw(userId, order.getTotalAmount());
+
 
         deleteOrder(order);
 
@@ -120,7 +122,6 @@ public class OrderServiceImpl implements OrderService {
 
         saveOrder(order);
 
-        System.out.println("Заказ №" + orderId + " успешно оплачен");
     }
 
     @Override
