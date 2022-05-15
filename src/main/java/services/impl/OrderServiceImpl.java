@@ -130,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
 
         Optional<Order> orderOptional = findOrder(orderId);
         if (orderOptional.isEmpty()) {
-            throw new OrderException(String.format("Заказ не существует: orderId=%s", orderId));
+            throw new OrderException(String.format("Заказ №%s не существует", orderId));
         }
 
         Order order = orderOptional.get();
@@ -153,7 +153,7 @@ public class OrderServiceImpl implements OrderService {
 
         saveOrder(order);
 
-        System.out.printf("Средства по заказу №%s успешно возвращены", orderId);
+        System.out.printf("Средства по заказу №%s успешно возвращены\n", orderId);
     }
 
     @Override
