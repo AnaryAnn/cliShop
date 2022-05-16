@@ -16,7 +16,7 @@ import static model.Currency.RUB;
 public class OrderServiceImplTest {
 
     @Test
-    public void testCreateOrder() throws OrderException, WalletException {
+    public void testCreateOrder() throws OrderException, WalletException { //todo: [Review] WalletException?
 
         Category category = Category.builder()
                 .setId(65464L)

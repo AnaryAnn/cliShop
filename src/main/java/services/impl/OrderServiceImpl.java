@@ -53,10 +53,10 @@ public class OrderServiceImpl implements OrderService {
 
         saveOrder(order);
 
-        return order.getId();
+        return order.getId(); //todo: [Review] тут не самый лучший выбор возвращать айди, лучше вернуть order
     }
 
-    private void saveOrder(Order order) {
+    private void saveOrder(Order order) {//todo: [Review] вот в таких местах оч полезно юзать анноташки @Nonnul, чтобы показать, что null тут точно не придет
 
         ordersMap.put(order.getId(), order);
 
@@ -84,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
         requireNonNull(newCurrency, "newCurrency");
 
         // todo: сделать конвертацию в отдельном сервисе
+        //todo: [Review] мусор не храним
 //        switch (newCurrency) {
 //            case RUB:
 //                break;
@@ -108,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderOptional.get();
 
         WalletServiceImpl.getInstance().withdraw(userId, order.getTotalAmount());
-
+        //todo: [Review] тут зачем то лишний переход на новую строчку и такое много где в классах
 
         deleteOrder(order);
 
@@ -173,7 +174,7 @@ public class OrderServiceImpl implements OrderService {
 
         Set<Long> orderIds = orderIdsOptional.get();
         Set<Order> result = new HashSet<>();
-        for (Long orderId : orderIds) {
+        for (Long orderId : orderIds) { //todo: [Review] давай к стримам привыкать, тут можно хорошо стримчиком сделать :)
             if (ordersMap.containsKey(orderId)) {
                 result.add(ordersMap.get(orderId));
             }
@@ -184,7 +185,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Collection<Order> getAllOrders() {
-        return ordersMap.values();
+        return ordersMap.values(); //todo: [Review]
     }
 
 }

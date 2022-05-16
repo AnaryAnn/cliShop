@@ -29,12 +29,12 @@ public interface StatisticService {
      *
      * @return мапа категория/кол-во продаж
      */
-    Map<Category, Long> getBestSellerCategory();
+    Map<Category, Long> getBestSellerCategory(); //todo: [Review] getBestSellCategory
 
     /**
      * Получение категорий и денежный оборот в них
      *
      * @return мапа категория/денежный оборот
      */
-    Map<Category, Double> getCirculationMoney();
+    Map<Category, Double> getCirculationMoney(); //todo: [Review] что то циркуляция денег звучит не очень, может как то нейминг поменять?
 }

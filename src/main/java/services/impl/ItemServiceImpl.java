@@ -15,7 +15,7 @@ import static model.Currency.RUB;
 public class ItemServiceImpl implements ItemService {
 
     private final List<Item> itemsList = new ArrayList<>();
-    private final Map<String, Category> categorySet = new HashMap<>();
+    private final Map<String, Category> categorySet = new HashMap<>(); //todo: [Review] вроде это мапа уже, а не Set
     private Long itemSequence = 0L;
     private Long categorySequence = 0L;
 
@@ -88,9 +88,9 @@ public class ItemServiceImpl implements ItemService {
                 .setAmount(amount)
                 .build());
     }
-
+    //todo: [Review] а нам точно нужны оба метода addCategory?
     private void addCategory(String name, Category parent) {
-        categorySet.put(name,
+        categorySet.put(name, //todo: [Review] тут зря переход на след строчку сделала
                 Category.builder()
                         .setId(++categorySequence)
                         .setName(name)

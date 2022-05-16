@@ -40,7 +40,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @return мапа валюта-сумма
      */
-    Map<Currency, Double> getBalance(Long userId);
+    Map<Currency, Double> getBalance(Long userId); //todo: [Review] getUserBalance?
 
 
 }

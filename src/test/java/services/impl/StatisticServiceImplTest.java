@@ -59,7 +59,7 @@ public class StatisticServiceImplTest {
                 .setAmount(new Amount(RUB, 3d))
                 .build());
 
-        OrderService orderService = OrderServiceImpl.getInstance();
+        OrderService orderService = OrderServiceImpl.getInstance(); //todo: [Review] это нам нужно? и ниже
         Long orderId = orderService.createOrder(123321L, items);
 
         StatisticServiceImpl statisticService = new StatisticServiceImpl();

@@ -7,9 +7,9 @@ public class Category {
 
     private final Long id;
     private final String name;
-    private final Category parent;
+    private final Category parent; //todo: [Review] кстати у всех полей тоже пишем комменты, это оч полезно, к примеру как тут, потому что нужно гадать, что за парент такой.
 
-    private Category(long id, String name, Category parent) {
+    private Category(long id, String name, Category parent) { //todo: [Review] id примитив?
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.parent = parent;
