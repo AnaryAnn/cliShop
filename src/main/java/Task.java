@@ -19,7 +19,7 @@ public class Task {
 
         WalletService walletService = WalletServiceImpl.getInstance();
         walletService.createWallet(userId);
-        walletService.deposit(userId, new Amount(RUB, 100d));
+        walletService.deposit(userId, new Amount(RUB, 1000d));
 
         new CommandLineInterfaceImpl().run();
     }

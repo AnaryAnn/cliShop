@@ -8,6 +8,9 @@ import model.Wallet;
 
 import java.util.Map;
 
+/**
+ * Интерфейс для работы с кошельком
+ */
 public interface WalletService {
 
     /**
@@ -40,7 +43,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @return мапа валюта-сумма
      */
-    Map<Currency, Double> getBalance(Long userId); //todo: [Review] getUserBalance?
+    Map<Currency, Double> getUserBalance(Long userId);
 
 
 }

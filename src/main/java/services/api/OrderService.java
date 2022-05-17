@@ -9,6 +9,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Интерфейс для работы с заказами
+ */
 public interface OrderService {
 
     /**
@@ -18,7 +21,7 @@ public interface OrderService {
      * @param items список товаров
      * @return созданный заказ
      */
-    Long createOrder(Long userId, Collection<Item> items) throws OrderException;
+    Order createOrder(Long userId, Collection<Item> items) throws OrderException;
 
     /**
      * Поиск заказа

@@ -5,11 +5,20 @@ import java.util.Optional;
 
 public class Category {
 
+    /**
+     * ID категории
+     */
     private final Long id;
+    /**
+     * Название категории
+     */
     private final String name;
-    private final Category parent; //todo: [Review] кстати у всех полей тоже пишем комменты, это оч полезно, к примеру как тут, потому что нужно гадать, что за парент такой.
+    /**
+     * Родительская категория
+     */
+    private final Category parent;
 
-    private Category(long id, String name, Category parent) { //todo: [Review] id примитив?
+    private Category(Long id, String name, Category parent) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.parent = parent;
@@ -28,10 +37,10 @@ public class Category {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Category category = (Category) o;
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Category category = (Category) obj;
         return id.equals(category.id) && name.equals(category.name) && Objects.equals(parent, category.parent);
     }
 
@@ -45,11 +54,11 @@ public class Category {
     }
 
     public static class Builder {
-        private long id;
+        private Long id;
         private String name;
         private Category parent;
 
-        public Builder setId(long id) {
+        public Builder setId(Long id) {
             this.id = id;
             return this;
         }

@@ -4,6 +4,10 @@ import exceptions.OrderException;
 import exceptions.WalletException;
 
 public interface CommandLineInterface {
-
-    public void run() throws WalletException, OrderException; //todo: [Review] public нужен? И где джава доки?
+    /**
+     * Интерфейс работы с коммандной строкой
+     * @throws WalletException - исключения кошелька
+     * @throws OrderException - исключения заказа
+     */
+    void run() throws WalletException, OrderException;
 }

@@ -7,6 +7,7 @@ import model.*;
 import services.api.OrderService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static model.Currency.RUB;
@@ -37,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Long createOrder(Long userId, Collection<Item> items) throws OrderException {
+    public Order createOrder(Long userId, Collection<Item> items) throws OrderException {
         requireNonNull(userId, "userId");
         if (items.isEmpty()) {
             throw new OrderException("Корзина пуста");
@@ -53,10 +54,10 @@ public class OrderServiceImpl implements OrderService {
 
         saveOrder(order);
 
-        return order.getId(); //todo: [Review] тут не самый лучший выбор возвращать айди, лучше вернуть order
+        return order;
     }
 
-    private void saveOrder(Order order) {//todo: [Review] вот в таких местах оч полезно юзать анноташки @Nonnul, чтобы показать, что null тут точно не придет
+    private void saveOrder(Order order) {
 
         ordersMap.put(order.getId(), order);
 
@@ -83,16 +84,6 @@ public class OrderServiceImpl implements OrderService {
         requireNonNull(amount, "amount");
         requireNonNull(newCurrency, "newCurrency");
 
-        // todo: сделать конвертацию в отдельном сервисе
-        //todo: [Review] мусор не храним
-//        switch (newCurrency) {
-//            case RUB:
-//                break;
-//            case USD:
-//                break;
-//            case EUR:
-//                break;
-//        }
         return amount.getSum();
     }
 
@@ -109,7 +100,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderOptional.get();
 
         WalletServiceImpl.getInstance().withdraw(userId, order.getTotalAmount());
-        //todo: [Review] тут зачем то лишний переход на новую строчку и такое много где в классах
 
         deleteOrder(order);
 
@@ -122,7 +112,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         saveOrder(order);
-
     }
 
     @Override
@@ -136,6 +125,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = orderOptional.get();
+
+        if (!order.getUserId().equals(userId)) {
+            throw new OrderException(String.format("Заказ №%s не существует", orderId));
+        }
+
         if (!order.getStatus().equals(Status.PAID)) {
             throw new OrderException(String.format("Оформить возврат можно только по оплаченному заказу\n" +
                     "Статус заказа №%s: %s", orderId, order.getStatus()));
@@ -167,25 +161,20 @@ public class OrderServiceImpl implements OrderService {
     public Set<Order> getUserOrdersSet(Long userId) {
         requireNonNull(userId, "userId");
 
-        Optional<Set<Long>> orderIdsOptional = Optional.ofNullable(userOrdersMap.get(userId));
-        if (orderIdsOptional.isEmpty()) {
+        Optional<Set<Long>> userOrderIdsOptional = Optional.ofNullable(userOrdersMap.get(userId));
+        if (userOrderIdsOptional.isEmpty()) {
             return Collections.emptySet();
         }
 
-        Set<Long> orderIds = orderIdsOptional.get();
-        Set<Order> result = new HashSet<>();
-        for (Long orderId : orderIds) { //todo: [Review] давай к стримам привыкать, тут можно хорошо стримчиком сделать :)
-            if (ordersMap.containsKey(orderId)) {
-                result.add(ordersMap.get(orderId));
-            }
-        }
-
-        return result;
+        return userOrderIdsOptional.get().stream()
+                .map(ordersMap::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     @Override
     public Collection<Order> getAllOrders() {
-        return ordersMap.values(); //todo: [Review]
+        return ordersMap.values();
     }
 
 }
