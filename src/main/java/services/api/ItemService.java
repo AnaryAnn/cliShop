@@ -3,14 +3,25 @@ package services.api;
 import model.Item;
 
 import java.util.List;
-//todo: [Review] комменты у классов, на всякий случай тут тож пишу
+import java.util.Optional;
+
+/**
+ * Интерфейс товаров магазина
+ */
 public interface ItemService {
 
     /**
      * Получение списка всех товаров в магазине
      *
-     * @return //todo: [Review] кто то тут поленился писать?
+     * @return Список всех товаров магазина
      */
-    List<Item> getItems(); //todo: [Review] я бы назвал его getAllItems, мы же все прям позвращается
+    List<Item> getAllItems();
+
+    /**
+     * Получение товара по id
+     * @param id - идентификатор товара
+     * @return Товар
+     */
+    Optional<Item> findItemById(Long id);
 
 }

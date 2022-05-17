@@ -16,9 +16,8 @@ import services.impl.WalletServiceImpl;
 
 import java.util.*;
 
-import static model.Currency.*;
+import static model.Currency.values;
 
-//todo: [Review] У классов (это относится и к сервисам) и методов не хватает комментов
 public class CommandLineInterfaceImpl implements CommandLineInterface {
 
     private final WalletService walletService = WalletServiceImpl.getInstance();
@@ -27,27 +26,27 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
     private final ItemService itemService = new ItemServiceImpl();
     private Long userId;
 
-
     @Override
     public void run() throws WalletException, OrderException {
         try (Scanner scanner = new Scanner(System.in)) {
-            //todo: [Review] Если ввести что то вместо цифры летит эксепшн и завершается работа
             auth(scanner);
             showCli(scanner);
         }
     }
 
-    //todo: [Review] Ошибка в этой функции не дает юзеру шансов вернуться в магазин
     private void auth(Scanner scanner) {
         System.out.println("Пожалуйста, введите идентификатор пользователя");
-        //todo: [Review] NPE если ввести что то кроме числа
-        //todo: [Review] отрицательные числа прокатывают, это норм?
-        userId = Long.valueOf(askInt(scanner));
+
+        Integer intOption = null;
+        while (intOption == null) {
+            intOption = askInt(scanner);
+            scanner.nextLine();
+        }
+        userId = Long.valueOf(intOption);
         walletService.createWallet(userId);
     }
 
-    //todo: [Review] OrderException нужен?
-    private void showCli(Scanner scanner) throws WalletException, OrderException {
+    private void showCli(Scanner scanner) throws WalletException {
         Integer intOption;
         do {
             intOption = null;
@@ -57,20 +56,13 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             System.out.println("Баланс кошелька: ");
             Arrays.stream(values())
                     .forEach(currency -> System.out.printf("%21s %s\n",
-                            getBalance(currency), currency));
+                            getCurrentUserBalance(currency), currency));
             System.out.println("----------------------------------");
-            //todo: [Review] "Введите номер товара для покупки в диапазоне от 1 до 26", это работает до тех пор пока у тебя не удалится какой-то товар, ведь первая цифра это идентификатор товара, а не порядковый номер.
-            //todo: [Review] 0 кстати прокатывает, несмотря на сообщение выше
             System.out.println("1 - Список доступных товаров");
             System.out.println("2 - Возврат заказа");
-            //todo: [Review] Нужна сортировка
             System.out.println("3 - История покупок");
-            //todo: [Review] Если нет никакой информации по статистике, то лучше отрисовывоть что типо "Нет данных для сбора статистики", или что то в этом роде, как ты сделала с историей заказов
             System.out.println("4 - Статистика");
-            //todo: [Review] Допускается пополнение кошелька на 0 рублей
-            //todo: [Review] Допускается пополнение кошелька на 9999999999999999999999999999999999999999999999999999999999999999999999999999999999... рублей и как итог Infinity на счету
             System.out.println("5 - Пополнение кошелька");
-            //todo: [Review] [Bug100500%] Можно зайти под другим юзером и сделать возврат всех заказаов другого юзера
             System.out.println("6 - Логаут");
             System.out.println("0 - Выход");
 
@@ -81,7 +73,7 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             switch (intOption) {
 
                 case 1: {
-                    getItems(scanner);
+                    showAllItems(scanner);
                 }
                 break;
 
@@ -91,12 +83,12 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                 break;
 
                 case 3: {
-                    history(scanner);
+                    showHistory(scanner);
                 }
                 break;
 
                 case 4: {
-                    statistic(scanner);
+                    showStatistic(scanner);
                 }
                 break;
 
@@ -118,21 +110,19 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         while (intOption != 0);
     }
 
-    //todo: [Review] может getCurrentUserBalance?
-    private double getBalance(Currency currency) {
-        Double result = walletService.getBalance(userId).get(currency);
+    private double getCurrentUserBalance(Currency currency) {
+        Double result = walletService.getUserBalance(userId).get(currency);
         return result == null ? 0 : result;
     }
 
-    //todo: [Review] Метод, который называется getItems сразу подразумевает, что он должен вернуть какие то значения, тут скорее всего лучше юзать, что то типа showAllItems
-    private void getItems(Scanner scanner) {
+    private void showAllItems(Scanner scanner) {
         Integer intOption;
         do {
             intOption = null;
 
-            //todo: [Review] Если товара нет, то почему break сразу? Скорее всего нужен какой-то мессадж об этом
-            List<Item> items = itemService.getItems();
+            List<Item> items = itemService.getAllItems();
             if (items.isEmpty()) {
+                System.out.println("Извините, список товаров пуст");
                 break;
             }
 
@@ -140,32 +130,37 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             items.forEach(item -> System.out.printf("%s | %s | %s %s\n", item.getId(), item.getName(),
                     item.getAmount().getSum(), item.getAmount().getCurrency()));
 
-            //todo: [Review] То самое место, где 0 прокатывает
-            while (intOption == null || intOption < 0 || intOption > items.size()) {
-                System.out.printf("\nВведите номер товара для покупки в диапазоне от %s до %s\n", 1, items.size());
+            while (intOption == null) {
+                System.out.printf("\nВведите номер товара для покупки\n");
                 System.out.println("0 - Назад");
                 intOption = askInt(scanner);
                 scanner.nextLine();
             }
 
-            if (intOption != 0) {
-                Long orderId = null; //todo: [Review] Тут даже идея подсказывает, что инициализация не нужна
+            if (intOption > 0) {
+                Long orderId;
+                Long itemId = Long.valueOf(intOption);
                 try {
-                    orderId = orderService.createOrder(userId, Collections.singleton(items.get(intOption - 1)));
+                    Optional<Item> itemOptional = itemService.findItemById(itemId);
+                    if (itemOptional.isEmpty()) {
+                        throw new OrderException(String.format("Товар №%d не найден\n", itemId));
+                    }
+                    Item item = itemOptional.get();
+                    orderId = orderService.createOrder(userId, Collections.singleton(item)).getId();
                     orderService.payment(userId, orderId);
                 } catch (OrderException | WalletException e) {
                     System.out.println(e.getMessage());
                     break;
                 }
-                System.out.println("Заказ №" + orderId + " успешно оплачен");
+                System.out.printf("Заказ №%d успешно оплачен\n", orderId);
+            } else {
+                System.out.println("Номер товара должен быть целым положительным числом");
             }
-        }//todo: [Review] тут ниже зачем пропуск?
-
+        }
         while (intOption != 0);
     }
 
-    //todo: [Review] название метода вообще не говорящее, должно начинаться с глагола
-    private void statistic(Scanner scanner) {
+    private void showStatistic(Scanner scanner) {
         Integer intOption;
         do {
             intOption = null;
@@ -184,28 +179,37 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             switch (intOption) {
                 case 1:
                     Map<Item, Long> bestSellers = statisticService.getBestSellers();
+                    if (bestSellers.isEmpty()){
+                        System.out.println("Недостаточно данных для сбора статистики");
+                        break;
+                    }
                     System.out.println("Название товара | Кол-во продаж");
                     bestSellers.entrySet().stream()
                             .sorted(Map.Entry.<Item, Long>comparingByValue().reversed())
-                            .limit(10) //todo: [Review] не самое хорошее решение обрезать это тут, лучше запрашивать уже с лимитов в 10 у сервиса, UI должен только отрисовать список, который ему прислали
                             .forEach(entry -> System.out.printf("%s | %s \n", entry.getKey().getName(), entry.getValue()));
                     System.out.println();
                     break;
                 case 2:
+                    Map<Category, Long> bestSellCategory = statisticService.getBestSellCategory();
+                    if (bestSellCategory.isEmpty()){
+                        System.out.println("Недостаточно данных для сбора статистики");
+                        break;
+                    }
                     System.out.println("Категория | Кол-во продаж");
-                    Map<Category, Long> bestSellersCategory = statisticService.getBestSellerCategory();
-                    bestSellersCategory.entrySet().stream()
+                    bestSellCategory.entrySet().stream()
                             .sorted(Map.Entry.<Category, Long>comparingByValue().reversed())
-                            .limit(10) //todo: [Review] аналогично с тем, что выше
                             .forEach(entry -> System.out.printf("%s | %s \n", entry.getKey().getName(), entry.getValue()));
                     System.out.println();
                     break;
                 case 3:
+                    Map<Category, Double> financialIncome = statisticService.getFinancialIncome();
+                    if (financialIncome.isEmpty()){
+                        System.out.println("Недостаточно данных для сбора статистики");
+                        break;
+                    }
                     System.out.println("Категория | Оборот RUB");
-                    Map<Category, Double> circulationMoney = statisticService.getCirculationMoney();
-                    circulationMoney.entrySet().stream()
+                    financialIncome.entrySet().stream()
                             .sorted(Map.Entry.<Category, Double>comparingByValue().reversed())
-                            .limit(10) //todo: [Review] аналогично с тем, что выше
                             .forEach(entry -> System.out.printf("%s | %s \n", entry.getKey().getName(), entry.getValue()));
                     System.out.println();
                     break;
@@ -213,14 +217,11 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                 default:
                     break;
             }
-
         }
         while (intOption != 0);
     }
 
-
-    //todo: [Review] нейминг и пропуски лишние выше
-    private void history(Scanner scanner) {
+    private void showHistory(Scanner scanner) {
         Integer intOption;
 
         do {
@@ -236,13 +237,11 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                     scanner.nextLine();
                 }
             } else {
-                Long orderId = null; //todo: [Review] это нужно?
                 System.out.println("Номер заказа |  Статус  | Сумма");
-
-                for (Order order : orders) {
-                    System.out.printf("%12s | %8s | %s %s\n", order.getId(), order.getStatus(),
-                            order.getTotalAmount().getSum(), order.getTotalAmount().getCurrency());
-                }
+                orders.stream()
+                        .sorted(Comparator.comparing(Order::getId))
+                        .forEach(order -> System.out.printf("%12s | %8s | %s %s\n", order.getId(), order.getStatus(),
+                                order.getTotalAmount().getSum(), order.getTotalAmount().getCurrency()));
 
                 System.out.println("\n0 - Назад");
                 while (intOption == null) {
@@ -250,13 +249,10 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
                     scanner.nextLine();
                 }
             }
-
         }
         while (intOption != 0);
-
     }
 
-    //todo: [Review] нейминг
     private void refund(Scanner scanner) throws WalletException {
         Long orderId;
 
@@ -279,19 +275,17 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
             }
         }
         while (orderId != 0);
-
     }
 
-    //todo: [Review] Нужно не ловишь WalletException (Как пример: Сумма не может быть отрицательной)
-    private void deposit(Scanner scanner) throws WalletException {
+    private void deposit(Scanner scanner) {
 
         Integer intOption = null;
         Double sum = null;
 
         System.out.println("Выберите валюту для пополнения");
-        System.out.println("1 - RUB"); //todo: [Review] Тут нужно выводить с помощью перечисления по енаму, иначе, добавив новую валюту, у нас тут она не отрисуется
-        System.out.println("2 - USD");
-        System.out.println("3 - EUR");
+        Arrays.stream(values())
+                .forEach(currency -> System.out.printf("%s - %s\n",
+                        currency.ordinal() + 1, currency));
         System.out.println("0 - Отмена");
 
         while (intOption == null) {
@@ -301,31 +295,25 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
 
         System.out.println("Введите сумму");
         while (sum == null) {
-            sum = askDouble(scanner); //todo: [Review] по хорошему на фронте обычно стараются пресечь невалидные кейсы до передачи беку, как тут, когда мы могли пресечь отрицательно число (было бы не критично, если бы мы хотя бы эксепшн ловили)
+            sum = askDouble(scanner);
             scanner.nextLine();
         }
-
-        switch (intOption) {
-            case 1: {
-                walletService.deposit(userId, new Amount(RUB, sum));
-            }
-            break;
-
-            case 2: {
-                walletService.deposit(userId, new Amount(USD, sum));
-            }
-            break;
-
-            case 3: {
-                walletService.deposit(userId, new Amount(EUR, sum));
-            }
-            break;
-
-            case 0:
-            default:
+        try {
+            switch (intOption) {
+                case 1:
+                case 2:
+                case 3: {
+                    walletService.deposit(userId, new Amount(Currency.values()[intOption - 1], sum));
+                }
                 break;
-        }
 
+                case 0:
+                default:
+                    break;
+            }
+        } catch (WalletException exception) {
+            System.out.println(exception.getMessage());
+        }
     }
 
     private Integer askInt(Scanner scanner) {
@@ -334,7 +322,6 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         } catch (InputMismatchException ex) {
             System.out.println("Пожалуйста введите целое число");
         }
-
         return null;
     }
 
@@ -344,17 +331,21 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         } catch (InputMismatchException ex) {
             System.out.println("Пожалуйста введите целое число");
         }
-
         return null;
     }
 
     private Double askDouble(Scanner scanner) {
         try {
-            return scanner.nextDouble();
+            double number = scanner.nextDouble();
+            if (number <= 0 || number > Double.MAX_VALUE) {
+                throw new IndexOutOfBoundsException(String.format("Значение должно быть в диапазоне (0, %s]", Double.MAX_VALUE));
+            }
+            return number;
         } catch (InputMismatchException ex) {
             System.out.println("Пожалуйста введите число");
+        } catch (IndexOutOfBoundsException ex) {
+            System.out.println(ex.getMessage());
         }
-
         return null;
     }
 }

@@ -6,7 +6,11 @@ import model.Order;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
+/**
+ * Интерфейс сбора статистики
+ */
 public interface StatisticService {
 
     /**
@@ -29,12 +33,12 @@ public interface StatisticService {
      *
      * @return мапа категория/кол-во продаж
      */
-    Map<Category, Long> getBestSellerCategory(); //todo: [Review] getBestSellCategory
+    Map<Category, Long> getBestSellCategory();
 
     /**
      * Получение категорий и денежный оборот в них
      *
      * @return мапа категория/денежный оборот
      */
-    Map<Category, Double> getCirculationMoney(); //todo: [Review] что то циркуляция денег звучит не очень, может как то нейминг поменять?
+    Map<Category, Double> getFinancialIncome();
 }

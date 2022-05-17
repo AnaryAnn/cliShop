@@ -33,6 +33,10 @@ public class WalletServiceImpl implements WalletService {
             throw new WalletException("Сумма не может быть отрицательной");
         }
 
+        if (amount.getSum() > Double.MAX_VALUE){
+            throw new WalletException(String.format("Баланс не может быть больше %s", Double.MAX_VALUE));
+        }
+
         Optional<Wallet> userWalletOptional = findWallet(userId);
         if (userWalletOptional.isEmpty()) {
             throw new WalletException("Кошелек не найден");
@@ -43,6 +47,9 @@ public class WalletServiceImpl implements WalletService {
 
         if (walletBalance.containsKey(amount.getCurrency())) {
             Double currencyBalance = walletBalance.get(amount.getCurrency());
+            if (currencyBalance + amount.getSum() > Double.MAX_VALUE){
+                throw new WalletException(String.format("Баланс не может быть больше %s", Double.MAX_VALUE));
+            }
             walletBalance.put(amount.getCurrency(), currencyBalance + amount.getSum());
         } else {
             walletBalance.put(amount.getCurrency(), amount.getSum());
@@ -98,7 +105,7 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public Map<Currency, Double> getBalance(Long userId) {
+    public Map<Currency, Double> getUserBalance(Long userId) {
         return findWallet(userId)
                 .map(Wallet::getBalance)
                 .orElse(Collections.emptyMap());

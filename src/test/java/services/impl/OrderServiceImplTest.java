@@ -4,91 +4,56 @@ import exceptions.OrderException;
 import exceptions.WalletException;
 import model.*;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+import services.api.ItemService;
 import services.api.OrderService;
+import services.api.StatisticService;
 import services.api.WalletService;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 import static model.Currency.RUB;
 
 public class OrderServiceImplTest {
+    
+    private final WalletService walletService = WalletServiceImpl.getInstance();
+    private final OrderService orderService = OrderServiceImpl.getInstance();
+    private final ItemService itemService = new ItemServiceImpl();
+
+    private Long userId;
+
 
     @Test
-    public void testCreateOrder() throws OrderException, WalletException { //todo: [Review] WalletException?
+    public void testCreateOrder() throws OrderException, WalletException {
 
-        Category category = Category.builder()
-                .setId(65464L)
-                .setName("Data Storage")
-                .build();
+        userId = 1L;
+        walletService.createWallet(userId);
+        walletService.deposit(userId, new Amount(RUB, 100d));
+        List<Item> items = new ArrayList<>();
+        items.add(itemService.findItemById(1L).get());
 
-        Collection<Item> items = new ArrayList<>();
-        items.add(Item.builder()
-                .setId(456464L)
-                .setName("SAMSUNG 970 EVO")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 1d))
-                .build());
-
-        items.add(Item.builder()
-                .setId(4567894L)
-                .setName("Seagate Portable 2TB")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 2d))
-                .build());
-
-        items.add(Item.builder()
-                .setId(12894L)
-                .setName("SanDisk 128GB Ultra Flair ")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 3d))
-                .build());
-
-        OrderService orderService = OrderServiceImpl.getInstance();
-        Long orderId = orderService.createOrder(123321L, items);
-        Assert.assertEquals(orderService.findOrder(orderId).get().getTotalAmount().getSum(), 6d);
+        Long orderId = orderService.createOrder(userId, items).getId();
+        Assert.assertEquals(orderService.findOrder(orderId).get().getTotalAmount().getSum(), 83d);
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.CREATED);
     }
 
     @Test
     public void testPayment() throws OrderException, WalletException {
 
-        Category category = Category.builder()
-                .setId(65464L)
-                .setName("Data Storage")
-                .build();
+        userId = 2L;
+        walletService.createWallet(userId);
+        walletService.deposit(userId, new Amount(RUB, 100d));
 
-        Collection<Item> items = new ArrayList<>();
-        items.add(Item.builder()
-                .setId(456464L)
-                .setName("SAMSUNG 970 EVO")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 1d))
-                .build());
+        List<Item> items = new ArrayList<>();
+        items.add(itemService.findItemById(1L).get());
 
-        items.add(Item.builder()
-                .setId(4567894L)
-                .setName("Seagate Portable 2TB")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 2d))
-                .build());
+        Long orderId = orderService.createOrder(userId, items).getId();
 
-        items.add(Item.builder()
-                .setId(12894L)
-                .setName("SanDisk 128GB Ultra Flair ")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 3d))
-                .build());
-
-        WalletService walletService = WalletServiceImpl.getInstance();
-        walletService.createWallet(123321L);
-        walletService.deposit(123321L, new Amount(RUB, 100d));
-
-        OrderService orderService = OrderServiceImpl.getInstance();
-        Long orderId = orderService.createOrder(123321L, items);
-
-        orderService.payment(123321L, orderService.findOrder(orderId).get().getId());
+        orderService.payment(userId, orderService.findOrder(orderId).get().getId());
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.PAID);
 
     }
@@ -96,47 +61,22 @@ public class OrderServiceImplTest {
     @Test
     public void testRefund() throws WalletException, OrderException {
 
-        Category category = Category.builder()
-                .setId(65464L)
-                .setName("Data Storage")
-                .build();
+        userId = 3L;
+        walletService.createWallet(userId);
+        walletService.deposit(userId, new Amount(RUB, 100d));
 
-        Collection<Item> items = new ArrayList<>();
-        items.add(Item.builder()
-                .setId(456464L)
-                .setName("SAMSUNG 970 EVO")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 1d))
-                .build());
+        List<Item> items = new ArrayList<>();
+        items.add(itemService.findItemById(1L).get());
 
-        items.add(Item.builder()
-                .setId(4567894L)
-                .setName("Seagate Portable 2TB")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 2d))
-                .build());
+        Long orderId = orderService.createOrder(userId, items).getId();
 
-        items.add(Item.builder()
-                .setId(12894L)
-                .setName("SanDisk 128GB Ultra Flair ")
-                .setCategory(category)
-                .setAmount(new Amount(RUB, 3d))
-                .build());
-
-        WalletService walletService = WalletServiceImpl.getInstance();
-        walletService.createWallet(123321L);
-        walletService.deposit(123321L, new Amount(RUB, 100d));
-
-        OrderService orderService = OrderServiceImpl.getInstance();
-        Long orderId = orderService.createOrder(123321L, items);
-
-        orderService.payment(123321L, orderService.findOrder(orderId).get().getId());
+        orderService.payment(userId, orderService.findOrder(orderId).get().getId());
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.PAID);
-        Assert.assertEquals(walletService.getBalance(123321L).get(RUB), 94d);
+        Assert.assertEquals(walletService.getUserBalance(userId).get(RUB), 17d);
 
-        orderService.refund(123321L, orderService.findOrder(orderId).get().getId());
+        orderService.refund(userId, orderService.findOrder(orderId).get().getId());
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.REFUNDED);
-        Assert.assertEquals(walletService.getBalance(123321L).get(RUB), 100d);
+        Assert.assertEquals(walletService.getUserBalance(userId).get(RUB), 100d);
 
     }
 }
