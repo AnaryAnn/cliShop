@@ -58,7 +58,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void saveOrder(Order order) {
-
         ordersMap.put(order.getId(), order);
 
         Set<Long> userOrderIds = userOrdersMap.get(order.getUserId());
