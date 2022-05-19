@@ -1,7 +1,5 @@
 package model;
 
-import java.util.Objects;
-
 import static java.util.Objects.requireNonNull;
 public class Amount {
 
@@ -11,6 +9,11 @@ public class Amount {
     public Amount(Currency currency, double price) {
         this.currency = requireNonNull(currency, "currency");
         this.sum = price;
+    }
+
+    public Amount() {
+        this.currency = Currency.RUB;
+        this.sum = 0;
     }
 
     public Currency getCurrency() {

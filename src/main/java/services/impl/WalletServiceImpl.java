@@ -29,6 +29,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public void deposit(Long userId, Amount amount) throws WalletException {
+
         if (!isAmountPositive(amount)) {
             throw new WalletException("Сумма не может быть отрицательной");
         }
@@ -37,12 +38,8 @@ public class WalletServiceImpl implements WalletService {
             throw new WalletException(String.format("Баланс не может быть больше %s", Double.MAX_VALUE));
         }
 
-        Optional<Wallet> userWalletOptional = findWallet(userId);
-        if (userWalletOptional.isEmpty()) {
-            throw new WalletException("Кошелек не найден");
-        }
+        Wallet userWallet = findWallet(userId).orElseGet(() -> createWallet(userId));
 
-        Wallet userWallet = userWalletOptional.get();
         Map<Currency, Double> walletBalance = userWallet.getBalance();
 
         if (walletBalance.containsKey(amount.getCurrency())) {

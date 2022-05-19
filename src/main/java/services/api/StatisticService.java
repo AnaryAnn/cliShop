@@ -1,12 +1,9 @@
 package services.api;
 
-import model.Category;
-import model.Item;
 import model.Order;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Интерфейс сбора статистики
@@ -26,19 +23,19 @@ public interface StatisticService {
      *
      * @return мапа товар/кол-во продаж
      */
-    Map<Item, Long> getBestSellers();
+    Map<String, Long> getBestSellers();
 
     /**
      * Получение категорий-бестселлеров и кол-во продаж в них
      *
      * @return мапа категория/кол-во продаж
      */
-    Map<Category, Long> getBestSellCategory();
+    Map<String, Long> getBestSellCategory();
 
     /**
      * Получение категорий и денежный оборот в них
      *
      * @return мапа категория/денежный оборот
      */
-    Map<Category, Double> getFinancialIncome();
+    Map<String, Double> getFinancialIncome();
 }

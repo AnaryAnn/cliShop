@@ -2,19 +2,18 @@ package services.impl;
 
 import exceptions.OrderException;
 import exceptions.WalletException;
-import model.*;
+import model.Amount;
+import model.Item;
+import model.Status;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import services.api.ItemService;
 import services.api.OrderService;
-import services.api.StatisticService;
 import services.api.WalletService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static model.Currency.RUB;
 
@@ -36,7 +35,7 @@ public class OrderServiceImplTest {
         List<Item> items = new ArrayList<>();
         items.add(itemService.findItemById(1L).get());
 
-        Long orderId = orderService.createOrder(userId, items).getId();
+        Long orderId = orderService.createOrder(userId, Collections.singleton(items.get(0).getId())).getId();
         Assert.assertEquals(orderService.findOrder(orderId).get().getTotalAmount().getSum(), 83d);
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.CREATED);
     }
@@ -51,7 +50,7 @@ public class OrderServiceImplTest {
         List<Item> items = new ArrayList<>();
         items.add(itemService.findItemById(1L).get());
 
-        Long orderId = orderService.createOrder(userId, items).getId();
+        Long orderId = orderService.createOrder(userId, Collections.singleton(items.get(0).getId())).getId();
 
         orderService.payment(userId, orderService.findOrder(orderId).get().getId());
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.PAID);
@@ -68,7 +67,7 @@ public class OrderServiceImplTest {
         List<Item> items = new ArrayList<>();
         items.add(itemService.findItemById(1L).get());
 
-        Long orderId = orderService.createOrder(userId, items).getId();
+        Long orderId = orderService.createOrder(userId, Collections.singleton(items.get(0).getId())).getId();
 
         orderService.payment(userId, orderService.findOrder(orderId).get().getId());
         Assert.assertEquals(orderService.findOrder(orderId).get().getStatus(), Status.PAID);

@@ -2,7 +2,6 @@ package services.api;
 
 import exceptions.OrderException;
 import exceptions.WalletException;
-import model.Item;
 import model.Order;
 
 import java.util.Collection;
@@ -21,7 +20,7 @@ public interface OrderService {
      * @param items список товаров
      * @return созданный заказ
      */
-    Order createOrder(Long userId, Collection<Item> items) throws OrderException;
+    Order createOrder(Long userId, Collection<Long> items) throws OrderException;
 
     /**
      * Поиск заказа

@@ -3,22 +3,15 @@ package gui.impl;
 import exceptions.OrderException;
 import exceptions.WalletException;
 import gui.api.CommandLineInterface;
-import model.Currency;
-import model.*;
-import services.api.ItemService;
-import services.api.OrderService;
-import services.api.StatisticService;
-import services.api.WalletService;
-import services.impl.ItemServiceImpl;
-import services.impl.OrderServiceImpl;
-import services.impl.StatisticServiceImpl;
-import services.impl.WalletServiceImpl;
-
-import java.util.*;
-
-import static model.Currency.values;
 
 public class CommandLineInterfaceImpl implements CommandLineInterface {
+
+    @Override
+    public void run() throws WalletException, OrderException {
+
+    }
+
+    /*
 
     private final WalletService walletService = WalletServiceImpl.getInstance();
     private final OrderService orderService = OrderServiceImpl.getInstance();
@@ -348,4 +341,6 @@ public class CommandLineInterfaceImpl implements CommandLineInterface {
         }
         return null;
     }
+
+     */
 }

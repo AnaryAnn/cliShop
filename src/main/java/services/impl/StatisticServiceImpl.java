@@ -1,6 +1,5 @@
 package services.impl;
 
-import model.Category;
 import model.Item;
 import model.Order;
 import model.Status;
@@ -8,19 +7,19 @@ import services.api.OrderService;
 import services.api.StatisticService;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class StatisticServiceImpl implements StatisticService {
     @Override
     public Set<Order> getOrderHistory(Long userId) {
         OrderService orderService = OrderServiceImpl.getInstance();
-        return orderService.getUserOrdersSet(userId);
-
+        return orderService.getUserOrdersSet(userId).stream()
+                .sorted(Comparator.comparing(Order::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override
-    public Map<Item, Long> getBestSellers() {
+    public Map<String, Long> getBestSellers() {
         OrderService orderService = OrderServiceImpl.getInstance();
         Optional<Collection<Order>> ordersOptional = Optional.ofNullable(orderService.getAllOrders());
         if (ordersOptional.isEmpty()) {
@@ -32,11 +31,11 @@ public class StatisticServiceImpl implements StatisticService {
                 .filter(order -> order.getStatus() == Status.PAID)
                 .flatMap(order -> order.getItems().stream())
                 .limit(10)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+                .collect(Collectors.groupingBy(Item::getName, Collectors.counting()));
     }
 
     @Override
-    public Map<Category, Long> getBestSellCategory() {
+    public Map<String, Long> getBestSellCategory() {
         OrderService orderService = OrderServiceImpl.getInstance();
         Optional<Collection<Order>> ordersOptional = Optional.ofNullable(orderService.getAllOrders());
         if (ordersOptional.isEmpty()) {
@@ -48,16 +47,15 @@ public class StatisticServiceImpl implements StatisticService {
                 .filter(order -> order.getStatus() == Status.PAID)
                 .flatMap(order -> order.getItems().stream())
                 .limit(10)
-                .collect(Collectors.groupingBy(Item::getCategory, Collectors.counting()));
-
+                .collect(Collectors.groupingBy(item -> item.getCategory().getName(), Collectors.counting()));
     }
 
     @Override
-    public Map<Category, Double> getFinancialIncome() {
+    public Map<String, Double> getFinancialIncome() {
 
         return OrderServiceImpl.getInstance().getAllOrders().stream()
                 .filter(order -> order.getStatus() == Status.PAID)
                 .flatMap(order -> order.getItems().stream())
-                .collect(Collectors.groupingBy(Item::getCategory, Collectors.summingDouble(value -> value.getAmount().getSum())));
+                .collect(Collectors.groupingBy(item -> item.getCategory().getName(), Collectors.summingDouble(value -> value.getAmount().getSum())));
     }
 }
