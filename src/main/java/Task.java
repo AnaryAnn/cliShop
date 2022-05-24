@@ -1,14 +1,9 @@
+import application.service.api.WalletService;
+import application.service.impl.WalletServiceImpl;
 import exceptions.OrderException;
 import exceptions.WalletException;
 import gui.impl.CommandLineInterfaceImpl;
-import model.*;
-import services.api.OrderService;
-import services.api.WalletService;
-import services.impl.OrderServiceImpl;
-import services.impl.WalletServiceImpl;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import model.Amount;
 
 import static model.Currency.RUB;
 

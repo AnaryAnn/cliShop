@@ -1,12 +1,12 @@
 package application.controller;
 
+import application.service.api.WalletService;
+import application.service.impl.WalletServiceImpl;
 import exceptions.WalletException;
 import model.Amount;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import services.api.WalletService;
-import services.impl.WalletServiceImpl;
 
 @RestController
 public class WalletController {

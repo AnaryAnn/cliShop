@@ -1,13 +1,12 @@
-package services.impl;
+package application.service.impl;
 
+import application.service.api.WalletService;
 import model.Amount;
 import model.Wallet;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import services.api.WalletService;
 
 import static model.Currency.RUB;
-import static org.testng.Assert.*;
 
 /**
  * Тестирование работы с кошельком

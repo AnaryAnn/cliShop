@@ -1,10 +1,10 @@
-package services.impl;
+package application.service.impl;
 
+import application.service.api.OrderService;
+import application.service.api.StatisticService;
 import model.Item;
 import model.Order;
 import model.Status;
-import services.api.OrderService;
-import services.api.StatisticService;
 
 import java.util.*;
 import java.util.stream.Collectors;

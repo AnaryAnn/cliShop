@@ -1,11 +1,11 @@
-package services.impl;
+package application.service.impl;
 
+import application.service.api.ItemService;
+import application.service.api.OrderService;
 import exceptions.OrderException;
 import exceptions.WalletException;
 import model.Currency;
 import model.*;
-import services.api.ItemService;
-import services.api.OrderService;
 
 import java.util.*;
 import java.util.stream.Collectors;

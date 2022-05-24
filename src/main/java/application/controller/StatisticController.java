@@ -1,11 +1,11 @@
 package application.controller;
 
+import application.service.api.StatisticService;
+import application.service.impl.StatisticServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import services.api.StatisticService;
-import services.impl.StatisticServiceImpl;
 
 @RestController
 public class StatisticController {

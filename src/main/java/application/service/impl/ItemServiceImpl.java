@@ -1,14 +1,18 @@
-package services.impl;
+package application.service.impl;
 
+import application.repository.ItemRepository;
+import application.service.api.ItemService;
 import model.Amount;
 import model.Category;
 import model.Item;
-import services.api.ItemService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 import static model.Currency.RUB;
 
+@Service
 public class ItemServiceImpl implements ItemService {
 
     private final List<Item> itemsList = new ArrayList<>();
@@ -16,6 +20,8 @@ public class ItemServiceImpl implements ItemService {
     private Long itemSequence = 0L;
     private Long categorySequence = 0L;
 
+    @Autowired
+    private ItemRepository itemRepository;
 
     public ItemServiceImpl() {
         addCategory("Молочное", null);
@@ -75,6 +81,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> getAllItems() {
         return itemsList;
+    }
+
+    @Override
+    public List<application.data.Item> getAllItemsDB() {
+        return itemRepository.findAll();
     }
 
     @Override

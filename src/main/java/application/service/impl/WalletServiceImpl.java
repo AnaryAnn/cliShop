@@ -1,10 +1,10 @@
-package services.impl;
+package application.service.impl;
 
+import application.service.api.WalletService;
 import exceptions.WalletException;
 import model.Amount;
 import model.Currency;
 import model.Wallet;
-import services.api.WalletService;
 
 import java.util.Collections;
 import java.util.HashMap;

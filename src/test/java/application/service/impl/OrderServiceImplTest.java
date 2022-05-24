@@ -1,5 +1,8 @@
-package services.impl;
+package application.service.impl;
 
+import application.service.api.ItemService;
+import application.service.api.OrderService;
+import application.service.api.WalletService;
 import exceptions.OrderException;
 import exceptions.WalletException;
 import model.Amount;
@@ -7,9 +10,6 @@ import model.Item;
 import model.Status;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import services.api.ItemService;
-import services.api.OrderService;
-import services.api.WalletService;
 
 import java.util.ArrayList;
 import java.util.Collections;

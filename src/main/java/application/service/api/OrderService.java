@@ -1,4 +1,4 @@
-package services.api;
+package application.service.api;
 
 import exceptions.OrderException;
 import exceptions.WalletException;

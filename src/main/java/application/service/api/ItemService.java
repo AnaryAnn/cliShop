@@ -1,4 +1,4 @@
-package services.api;
+package application.service.api;
 
 import model.Item;
 
@@ -16,6 +16,8 @@ public interface ItemService {
      * @return Список всех товаров магазина
      */
     List<Item> getAllItems();
+    
+    List<application.data.Item> getAllItemsDB();
 
     /**
      * Получение товара по id
