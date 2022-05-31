@@ -1,12 +1,12 @@
 package application.service.api;
 
+import application.model.OrderDTO;
 import exceptions.OrderException;
 import exceptions.WalletException;
-import model.Order;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Интерфейс для работы с заказами
@@ -20,14 +20,14 @@ public interface OrderService {
      * @param items список товаров
      * @return созданный заказ
      */
-    Order createOrder(Long userId, Collection<Long> items) throws OrderException;
+    OrderDTO createOrder(Long userId, Collection<Long> items) throws OrderException;
 
     /**
      * Поиск заказа
      * @param orderId идентификатор заказа
      * @return Заказ
      */
-    Optional<Order> findOrder(Long orderId);
+    Optional<OrderDTO> findOrder(Long orderId);
 
     /**
      * Оплата созданного заказа
@@ -48,12 +48,12 @@ public interface OrderService {
      * @param userId идентификатор пользователя
      * @return набор свех заказов пользователя
      */
-    Set<Order> getUserOrdersSet(Long userId);
+    List<OrderDTO> getUserOrdersSet(Long userId);
 
     /**
      * Получение списка всех заказов
      * @return набор свех заказов
      */
-    Collection<Order> getAllOrders();
+    Collection<OrderDTO> getAllOrders();
 
 }

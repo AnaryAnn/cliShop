@@ -1,9 +1,9 @@
 package application.controller;
 
+import application.model.AmountDTO;
 import application.service.api.WalletService;
-import application.service.impl.WalletServiceImpl;
 import exceptions.WalletException;
-import model.Amount;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class WalletController {
 
-    private final WalletService walletService = WalletServiceImpl.getInstance();
+    @Autowired
+    private WalletService walletService;
 
     @PostMapping("/deposit")
-    public ResponseEntity deposit(@RequestParam Long userId, @RequestBody Amount amount) {
+    public ResponseEntity deposit(@RequestParam Long userId, @RequestBody AmountDTO amount) {
         try {
             walletService.deposit(userId, amount);
         } catch (WalletException exception) {

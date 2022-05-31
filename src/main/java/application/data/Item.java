@@ -1,20 +1,25 @@
 package application.data;
 
 import javax.persistence.*;
+import java.util.Collection;
 
-@Table(name = "item")
 @Entity
+@Table(name = "item")
 public class Item {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
     private String name;
 
-    @Column
-    private String category;
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
+    @ManyToMany(mappedBy = "items")
+    private Collection<Order> orders;
 
     @Column
     private Double sum;
@@ -22,7 +27,7 @@ public class Item {
     @Column
     private String currency;
 
-    public Item(String name, String category, Double sum, String currency) {
+    public Item(String name, Category category, Double sum, String currency) {
         this.name = name;
         this.category = category;
         this.sum = sum;
@@ -48,11 +53,11 @@ public class Item {
         this.name = name;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
@@ -71,4 +76,14 @@ public class Item {
     public void setCurrency(String currency) {
         this.currency = currency;
     }
+
+    public Collection<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Collection<Order> orders) {
+        this.orders = orders;
+    }
 }
+
+

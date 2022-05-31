@@ -1,21 +1,33 @@
-package model;
+package application.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public class Item {
+public class ItemDTO {
 
-    private final Long id;
-    private final String name;
-    private final Category category;
-    private final Amount amount;
+    @JsonProperty("id")
+    private Long id;
 
-    private Item(Long id, String name, Category category, Amount amount) {
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("category")
+    private CategoryDTO category;
+
+    @JsonProperty("amount")
+    private AmountDTO amount;
+
+    private ItemDTO(Long id, String name, CategoryDTO category, AmountDTO amount) {
         this.id = requireNonNull(id, "id");
         this.name = requireNonNull(name, "name");
         this.category = requireNonNull(category, "category");
         this.amount = requireNonNull(amount, "amount");
+    }
+
+    public ItemDTO() {
     }
 
     public static Builder builder() {
@@ -30,11 +42,11 @@ public class Item {
         return name;
     }
 
-    public Category getCategory() {
+    public CategoryDTO getCategory() {
         return category;
     }
 
-    public Amount getAmount() {
+    public AmountDTO getAmount() {
         return amount;
     }
 
@@ -42,7 +54,7 @@ public class Item {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Item item = (Item) o;
+        ItemDTO item = (ItemDTO) o;
         return id.equals(item.id) && name.equals(item.name) && category.equals(item.category) && amount.equals(item.amount);
     }
 
@@ -55,8 +67,8 @@ public class Item {
 
         private Long id;
         private String name;
-        private Category category;
-        private Amount amount;
+        private CategoryDTO category;
+        private AmountDTO amount;
 
         public Builder setId(Long id) {
             this.id = id;
@@ -68,18 +80,18 @@ public class Item {
             return this;
         }
 
-        public Builder setCategory(Category category) {
+        public Builder setCategory(CategoryDTO category) {
             this.category = category;
             return this;
         }
 
-        public Builder setAmount(Amount amount) {
+        public Builder setAmount(AmountDTO amount) {
             this.amount = amount;
             return this;
         }
 
-        public Item build() {
-            return new Item(id, name, category, amount);
+        public ItemDTO build() {
+            return new ItemDTO(id, name, category, amount);
         }
 
     }

@@ -1,12 +1,12 @@
 package application.repository;
 
-import application.data.Item;
+import application.data.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface ItemRepository extends JpaRepository<Item, Long> {
-    List<Item> findItemsByCategory(String category);
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findOrdersByUserId(Long userId);
 }

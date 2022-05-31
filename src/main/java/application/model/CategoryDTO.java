@@ -1,27 +1,28 @@
-package model;
+package application.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
-import java.util.Optional;
 
-public class Category {
+public class CategoryDTO {
 
     /**
      * ID категории
      */
+    @JsonProperty("id")
     private final Long id;
+
     /**
      * Название категории
      */
+    @JsonProperty("name")
     private final String name;
-    /**
-     * Родительская категория
-     */
-    private final Category parent;
 
-    private Category(Long id, String name, Category parent) {
+    @JsonCreator
+    private CategoryDTO(@JsonProperty("id") Long id, @JsonProperty("name") String name) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
-        this.parent = parent;
     }
 
     public static Builder builder() {
@@ -40,23 +41,18 @@ public class Category {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        Category category = (Category) obj;
-        return id.equals(category.id) && name.equals(category.name) && Objects.equals(parent, category.parent);
+        CategoryDTO category = (CategoryDTO) obj;
+        return id.equals(category.id) && name.equals(category.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, parent);
-    }
-
-    public Optional<Category> getParent() {
-        return Optional.ofNullable(parent);
+        return Objects.hash(id, name);
     }
 
     public static class Builder {
         private Long id;
         private String name;
-        private Category parent;
 
         public Builder setId(Long id) {
             this.id = id;
@@ -68,13 +64,8 @@ public class Category {
             return this;
         }
 
-        public Builder setParent(Category parent) {
-            this.parent = parent;
-            return this;
-        }
-
-        public Category build() {
-            return new Category(id, name, parent);
+        public CategoryDTO build() {
+            return new CategoryDTO(id, name);
         }
     }
 }

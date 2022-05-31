@@ -1,6 +1,7 @@
 package application.service.api;
 
-import model.Item;
+import application.model.CategoryDTO;
+import application.model.ItemDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,15 +16,19 @@ public interface ItemService {
      *
      * @return Список всех товаров магазина
      */
-    List<Item> getAllItems();
-    
-    List<application.data.Item> getAllItemsDB();
+    List<ItemDTO> getAllItems();
 
     /**
      * Получение товара по id
+     *
      * @param id - идентификатор товара
      * @return Товар
      */
-    Optional<Item> findItemById(Long id);
+    Optional<ItemDTO> findItemById(Long id);
 
+    List<ItemDTO> findItemsByCategory(String category);
+
+    void createItems(List<ItemDTO> itemDto);
+
+    void createCategories(List<CategoryDTO> categoryDTO);
 }

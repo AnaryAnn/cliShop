@@ -1,40 +1,28 @@
 package application.controller;
 
-import application.service.api.ItemService;
+import application.model.OrderDTO;
 import application.service.api.OrderService;
-import application.service.impl.OrderServiceImpl;
 import exceptions.OrderException;
 import exceptions.WalletException;
-import model.Item;
-import model.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
 public class OrderController {
 
-    private final OrderService orderService = OrderServiceImpl.getInstance();
-
     @Autowired
-    private ItemService itemService;
-
-    @GetMapping("/items")
-    public List<Item> getAllItems() {
-        return itemService.getAllItems();
-    }
-
-    @GetMapping("/itemsDB")
-    public List<application.data.Item> getAllItemsDB() {
-        return itemService.getAllItemsDB();
-    }
+    private OrderService orderService;
 
     @PostMapping("/order")
     public ResponseEntity addOrder(@RequestParam Long userId, @RequestBody List<Long> itemId) {
-        Order order;
+        OrderDTO order;
         try {
             order = orderService.createOrder(userId, itemId);
         } catch (OrderException ex) {
@@ -45,7 +33,7 @@ public class OrderController {
 
     @PostMapping("/payment")
     public ResponseEntity payment(@RequestParam Long userId, @RequestParam Long orderId) {
-        Order order;
+        OrderDTO order;
         try {
             orderService.payment(userId, orderId);
         } catch (OrderException | WalletException ex) {
@@ -56,7 +44,7 @@ public class OrderController {
 
     @PostMapping("/refund")
     public ResponseEntity refund(@RequestParam Long userId, @RequestParam Long orderId) {
-        Order order;
+        OrderDTO order;
         try {
             orderService.refund(userId, orderId);
         } catch (OrderException | WalletException ex) {

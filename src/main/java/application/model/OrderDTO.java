@@ -1,17 +1,17 @@
-package model;
+package application.model;
 
 import java.util.Collection;
 import java.util.Objects;
 
-public class Order {
+public class OrderDTO {
 
     private final Long id;
     private final Long userId;
     private final Status status;
-    private final Collection<Item> items;
-    private final Amount totalAmount;
+    private final Collection<ItemDTO> items;
+    private final AmountDTO totalAmount;
 
-    private Order(Long id, Long userId, Status status, Collection<Item> items, Amount totalAmount) {
+    private OrderDTO(Long id, Long userId, Status status, Collection<ItemDTO> items, AmountDTO totalAmount) {
         this.id = Objects.requireNonNull(id, "id");
         this.status = Objects.requireNonNull(status, "status");
         this.items = Objects.requireNonNull(items, "items");
@@ -31,11 +31,11 @@ public class Order {
         return status;
     }
 
-    public Collection<Item> getItems() {
+    public Collection<ItemDTO> getItems() {
         return items;
     }
 
-    public Amount getTotalAmount() {
+    public AmountDTO getTotalAmount() {
         return totalAmount;
     }
 
@@ -47,7 +47,7 @@ public class Order {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Order order = (Order) o;
+        OrderDTO order = (OrderDTO) o;
         return id.equals(order.id) && userId.equals(order.userId) && status == order.status
                 && items.equals(order.items) && totalAmount.equals(order.totalAmount);
     }
@@ -62,8 +62,8 @@ public class Order {
         private Long id;
         private Long userId;
         private Status status;
-        private Collection<Item> items;
-        private Amount totalAmount;
+        private Collection<ItemDTO> items;
+        private AmountDTO totalAmount;
 
         public Builder setId(Long id) {
             this.id = id;
@@ -80,18 +80,18 @@ public class Order {
             return this;
         }
 
-        public Builder setItems(Collection<Item> items) {
+        public Builder setItems(Collection<ItemDTO> items) {
             this.items = items;
             return this;
         }
 
-        public Builder setTotalAmount(Amount totalAmount) {
+        public Builder setTotalAmount(AmountDTO totalAmount) {
             this.totalAmount = totalAmount;
             return this;
         }
 
-        public Order build() {
-            return new Order(id, userId, status, items, totalAmount);
+        public OrderDTO build() {
+            return new OrderDTO(id, userId, status, items, totalAmount);
         }
     }
 }

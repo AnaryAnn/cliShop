@@ -1,117 +1,126 @@
 package application.service.impl;
 
+import application.data.Order;
+import application.model.Currency;
+import application.model.*;
+import application.repository.OrderRepository;
 import application.service.api.ItemService;
 import application.service.api.OrderService;
+import application.service.api.WalletService;
 import exceptions.OrderException;
 import exceptions.WalletException;
-import model.Currency;
-import model.*;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static application.model.Currency.RUB;
 import static java.util.Objects.requireNonNull;
-import static model.Currency.RUB;
 
+@Service
 public class OrderServiceImpl implements OrderService {
 
     private static final Currency defaultCurrency = RUB;
-    private static OrderServiceImpl orderService;
-    /**
-     * Хранилище идентификаторов заказов пользователя (id пользователя - список id заказов пользователя)
-     */
-    private final Map<Long, Set<Long>> userOrdersMap = new HashMap<>();
-    /**
-     * Хранилище заказов (id заказа - заказ)
-     */
-    private final Map<Long, Order> ordersMap = new HashMap<>();
-    private ItemService itemService = new ItemServiceImpl();
-    private Long orderSequence = 0L;
+    private final Function<Order, OrderDTO> MAPPER_TO_DTO = entity -> OrderDTO.builder()
+            .setId(entity.getId())
+            .setUserId(entity.getUserId())
+            .setItems(entity.getItems().stream().map(ItemServiceImpl.MAPPER_TO_DTO).collect(Collectors.toList()))
+            .setStatus(Status.valueOf(entity.getStatus()))
+            .setTotalAmount(new AmountDTO(Currency.valueOf(entity.getCurrency()), entity.getAmount()))
+            .build();
 
-    private OrderServiceImpl() {
-    }
-
-    public static OrderServiceImpl getInstance() {
-        if (orderService == null) {
-            orderService = new OrderServiceImpl();
-        }
-        return orderService;
-    }
+    @Autowired
+    private ItemService itemService;
+    @Autowired
+    private WalletService walletService;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Override
-    public Order createOrder(Long userId, Collection<Long> itemIds) throws OrderException {
+    public OrderDTO createOrder(Long userId, Collection<Long> itemIds) throws OrderException {
         requireNonNull(userId, "userId");
         if (itemIds.isEmpty()) {
             throw new OrderException("Корзина пуста");
         }
 
         List<Long> notExistedItemIds = new ArrayList<>();
-        List<Item> items = new ArrayList<>();
+        List<ItemDTO> items = new ArrayList<>();
         for (Long id : itemIds) {
-            Optional<Item> itemOptional = itemService.findItemById(id);
-            if (itemOptional.isEmpty()) {
+            Optional<ItemDTO> itemOptional = itemService.findItemById(id);
+            if (!itemOptional.isPresent()) {
                 notExistedItemIds.add(id);
             } else {
                 items.add(itemOptional.get());
             }
         }
-        if (!notExistedItemIds.isEmpty()){
+        if (!notExistedItemIds.isEmpty()) {
             throw new OrderException(String.format("Товары с id=%s не найдены\n", notExistedItemIds));
         }
 
-        Order order = Order.builder()
-                .setId(++orderSequence)
+        return saveOrder(OrderDTO.builder()
+                .setId(Long.MIN_VALUE)
                 .setUserId(userId)
                 .setStatus(Status.CREATED)
                 .setItems(items)
                 .setTotalAmount(getTotalAmount(items))
-                .build();
-
-        saveOrder(order);
-
-        return order;
+                .build());
     }
 
-    private void saveOrder(Order order) {
-        ordersMap.put(order.getId(), order);
+    private OrderDTO saveOrder(OrderDTO order) {
+        mapperDtoToEntity();
+        return MAPPER_TO_DTO.apply(orderRepository.save(modelMapper.map(order, Order.class)));
+    }
 
-        Set<Long> userOrderIds = userOrdersMap.get(order.getUserId());
-        if (userOrderIds == null) {
-            userOrderIds = new HashSet<>();
+    private void mapperDtoToEntity() {
+        TypeMap<OrderDTO, Order> propertyMapper = modelMapper.getTypeMap(OrderDTO.class, Order.class);
+        if (propertyMapper == null) {
+            propertyMapper = modelMapper.createTypeMap(OrderDTO.class, Order.class);
+            propertyMapper.addMappings(
+                    mapper -> mapper.map(src -> src.getTotalAmount().getCurrency(), Order::setCurrency)
+            );
+            propertyMapper.addMappings(
+                    mapper -> mapper.map(src -> src.getTotalAmount().getSum(), Order::setAmount)
+            );
         }
-        userOrderIds.add(order.getId());
-        userOrdersMap.put(order.getUserId(), userOrderIds);
     }
 
-    private void deleteOrder(Order order) {
-        ordersMap.remove(order.getId());
+    private void deleteOrder(OrderDTO order) {
+        orderRepository.delete(modelMapper.map(order, Order.class));
     }
 
-    private Amount getTotalAmount(Collection<Item> items) {
+    private AmountDTO getTotalAmount(Collection<ItemDTO> items) {
         double sum = items.stream()
                 .mapToDouble(item -> convertSumByCurrency(item.getAmount(), defaultCurrency))
                 .sum();
-        return new Amount(defaultCurrency, sum);
+        return new AmountDTO(defaultCurrency, sum);
     }
 
-    private double convertSumByCurrency(Amount amount, Currency newCurrency) {
+    private double convertSumByCurrency(AmountDTO amount, Currency newCurrency) {
         requireNonNull(amount, "amount");
         requireNonNull(newCurrency, "newCurrency");
 
         return amount.getSum();
     }
 
+    @Transactional
     @Override
     public void payment(Long userId, Long orderId) throws WalletException, OrderException {
         requireNonNull(userId, "userId");
         requireNonNull(orderId, "orderId");
 
-        Optional<Order> orderOptional = findOrder(orderId);
-        if (orderOptional.isEmpty()) {
+        Optional<OrderDTO> orderOptional = findOrder(orderId);
+        if (!orderOptional.isPresent()) {
             throw new OrderException(String.format("Заказ №%s не существует", orderId));
         }
 
-        Order order = orderOptional.get();
+        OrderDTO order = orderOptional.get();
 
         if (!order.getUserId().equals(userId)) {
             throw new OrderException(String.format("Заказ №%s не существует", orderId));
@@ -125,19 +134,15 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderException(String.format("Невозможно оплатить.\nНа заказ №%s оформлен возврат", orderId));
         }
 
-        WalletServiceImpl.getInstance().withdraw(userId, order.getTotalAmount());
-
-        deleteOrder(order);
-
-        order = Order.builder()
-                .setId(order.getId())
+        AmountDTO totalAmount = order.getTotalAmount();
+        walletService.withdraw(userId, totalAmount);
+        saveOrder(OrderDTO.builder()
+                .setId(orderId)
                 .setUserId(userId)
                 .setStatus(Status.PAID)
                 .setItems(order.getItems())
-                .setTotalAmount(order.getTotalAmount())
-                .build();
-
-        saveOrder(order);
+                .setTotalAmount(totalAmount)
+                .build());
     }
 
     @Override
@@ -145,12 +150,12 @@ public class OrderServiceImpl implements OrderService {
         requireNonNull(userId, "userId");
         requireNonNull(orderId, "orderId");
 
-        Optional<Order> orderOptional = findOrder(orderId);
-        if (orderOptional.isEmpty()) {
+        Optional<OrderDTO> orderOptional = findOrder(orderId);
+        if (!orderOptional.isPresent()) {
             throw new OrderException(String.format("Заказ №%s не существует", orderId));
         }
 
-        Order order = orderOptional.get();
+        OrderDTO order = orderOptional.get();
 
         if (!order.getUserId().equals(userId)) {
             throw new OrderException(String.format("Заказ №%s не существует", orderId));
@@ -161,44 +166,34 @@ public class OrderServiceImpl implements OrderService {
                     "Статус заказа №%s: %s", orderId, order.getStatus()));
         }
 
-        WalletServiceImpl.getInstance().deposit(userId, order.getTotalAmount());
-
-        deleteOrder(order);
-
-        order = Order.builder()
-                .setId(order.getId())
+        AmountDTO totalAmount = order.getTotalAmount();
+        walletService.deposit(userId, totalAmount);
+        saveOrder(OrderDTO.builder()
+                .setId(orderId)
                 .setUserId(userId)
                 .setStatus(Status.REFUNDED)
                 .setItems(order.getItems())
-                .setTotalAmount(order.getTotalAmount())
-                .build();
-
-        saveOrder(order);
+                .setTotalAmount(totalAmount)
+                .build());
     }
 
     @Override
-    public Optional<Order> findOrder(Long orderId) {
-        return Optional.ofNullable(ordersMap.get(orderId));
+    public Optional<OrderDTO> findOrder(Long orderId) {
+        return orderRepository.findById(orderId).map(MAPPER_TO_DTO);
     }
 
     @Override
-    public Set<Order> getUserOrdersSet(Long userId) {
+    public List<OrderDTO> getUserOrdersSet(Long userId) {
         requireNonNull(userId, "userId");
-
-        Optional<Set<Long>> userOrderIdsOptional = Optional.ofNullable(userOrdersMap.get(userId));
-        if (userOrderIdsOptional.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        return userOrderIdsOptional.get().stream()
-                .map(ordersMap::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        Optional<List<Order>> userOrdersOptional = Optional.ofNullable(orderRepository.findOrdersByUserId(userId));
+        return userOrdersOptional.map(orders -> orders.stream()
+                .map(MAPPER_TO_DTO)
+                .collect(Collectors.toList())).orElse(Collections.emptyList());
     }
 
     @Override
-    public Collection<Order> getAllOrders() {
-        return ordersMap.values();
+    public Collection<OrderDTO> getAllOrders() {
+        return orderRepository.findAll().stream().map(MAPPER_TO_DTO).collect(Collectors.toList());
     }
 
 }

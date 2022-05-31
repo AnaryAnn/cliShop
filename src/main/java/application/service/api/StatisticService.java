@@ -1,6 +1,6 @@
 package application.service.api;
 
-import model.Order;
+import application.model.OrderDTO;
 
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +16,7 @@ public interface StatisticService {
      * @param userId идентификатор пользователя
      * @return список заказов пользователя
      */
-    Set<Order> getOrderHistory(Long userId);
+    Set<OrderDTO> getOrderHistory(Long userId);
 
     /**
      * Получение товаров-бестселлеров и кол-во их продаж

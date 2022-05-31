@@ -1,12 +1,9 @@
 package application.service.api;
 
 
+import application.model.AmountDTO;
+import application.model.WalletDTO;
 import exceptions.WalletException;
-import model.Amount;
-import model.Currency;
-import model.Wallet;
-
-import java.util.Map;
 
 /**
  * Интерфейс для работы с кошельком
@@ -19,7 +16,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @param amount сумма и валюта пополнения
      */
-    void deposit(Long userId, Amount amount) throws WalletException;
+    void deposit(Long userId, AmountDTO amount) throws WalletException;
 
     /**
      * Снятие денежных средств с кошелька
@@ -27,7 +24,7 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @param amount сумма и валюта пополнения
      */
-    void withdraw(Long userId, Amount amount) throws WalletException;
+    void withdraw(Long userId, AmountDTO amount) throws WalletException;
 
     /**
      * Создание кошелька для пользователя
@@ -35,15 +32,15 @@ public interface WalletService {
      * @param userId идентификатор пользователя
      * @return кошелек
      */
-    Wallet createWallet(Long userId);
+    WalletDTO createWallet(Long userId);
 
     /**
      * Получение баланса кошелька
      *
      * @param userId идентификатор пользователя
-     * @return мапа валюта-сумма
+     * @return сумма
      */
-    Map<Currency, Double> getUserBalance(Long userId);
+    AmountDTO getUserBalance(Long userId);
 
 
 }
